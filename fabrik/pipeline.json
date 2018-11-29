@@ -1,0 +1,87 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Minimally viable Fabrik project",
+    "Parameters": {
+        "ArtifactStore": {
+            "Type": "String"
+        },
+        "RepoOwner": {
+            "Type": "String"
+        },
+        "RepoName": {
+            "Type": "String"
+        },
+        "RepoBranch": {
+            "Type": "String"
+        },
+        "RepoToken": {
+            "Type": "String"
+        },
+        "Stage": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "PipelineRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Path": "/",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": "codepipeline.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                    }]
+                },
+                "Policies": [{
+                    "PolicyName": "root",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": "*",
+                            "Resource": "*"
+                        }]
+                    }
+                }]
+            }
+        },
+        "Pipeline": {
+            "Type": "AWS::CodePipeline::Pipeline",
+            "Properties": {
+                "Name": { "Ref": "AWS::StackName" },
+                "ArtifactStore": {
+                    "Location": { "Ref": "ArtifactStore" },
+                    "Type": "S3"
+                },
+                "RoleArn": { "Fn::GetAtt": [ "PipelineRole", "Arn" ] },
+                "Stages": [
+                    {
+                        "Name": "Source",
+                        "Actions": [{
+                            "Name": "GitHub",
+                            "ActionTypeId": {
+                                "Category": "Source",
+                                "Owner": "ThirdParty",
+                                "Provider": "GitHub",
+                                "Version": "1"
+                            },
+                            "Configuration": {
+                                "Owner": { "Ref": "RepoOwner" },
+                                "Repo": { "Ref": "RepoName" },
+                                "Branch": { "Ref": "RepoBranch" },
+                                "OAuthToken": { "Ref": "RepoToken" },
+                                "PollForSourceChanges": false
+                            },
+                            "OutputArtifacts": [ { "Name": "source" } ],
+                            "RunOrder": 1
+                        }]
+                    }
+                ]
+            }
+        }
+    }
+}
