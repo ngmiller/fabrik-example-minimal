@@ -21,34 +21,10 @@
             "Type": "String"
         }
     },
+    "Conditions": {
+        "IsProd": { "Fn::Equals": [ { "Ref": "Stage" }, "production" ] }
+    },
     "Resources": {
-        "PipelineRole": {
-            "Type": "AWS::IAM::Role",
-            "Properties": {
-                "Path": "/",
-                "AssumeRolePolicyDocument": {
-                    "Version": "2012-10-17",
-                    "Statement": [{
-                        "Effect": "Allow",
-                        "Principal": {
-                            "Service": "codepipeline.amazonaws.com"
-                        },
-                        "Action": "sts:AssumeRole"
-                    }]
-                },
-                "Policies": [{
-                    "PolicyName": "root",
-                    "PolicyDocument": {
-                        "Version": "2012-10-17",
-                        "Statement": [{
-                            "Effect": "Allow",
-                            "Action": "*",
-                            "Resource": "*"
-                        }]
-                    }
-                }]
-            }
-        },
         "Pipeline": {
             "Type": "AWS::CodePipeline::Pipeline",
             "Properties": {
@@ -79,8 +55,53 @@
                             "OutputArtifacts": [ { "Name": "source" } ],
                             "RunOrder": 1
                         }]
+                    },
+                    {
+                        "Name": "Approve",
+                        "Actions": [{
+                            "Name": "Approve",
+                            "ActionTypeId": {
+                                "Category": "Approval",
+                                "Owner": "AWS",
+                                "Provider": "Manual",
+                                "Version": "1"
+                            },
+                            "Configuration": {
+                                "CustomData": "Empty approval step"
+                            },
+                            "InputArtifacts": [],
+                            "OutputArtifacts": [],
+                            "RunOrder": 1
+                        }]
                     }
                 ]
+            }
+        },
+        "PipelineRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Path": "/",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": "codepipeline.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                    }]
+                },
+                "Policies": [{
+                    "PolicyName": "root",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": "*",
+                            "Resource": "*"
+                        }]
+                    }
+                }]
             }
         }
     }
